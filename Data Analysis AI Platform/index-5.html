@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Data Analyst Platform</title>
+<style>
+:root{
+  --ink:#16232e; --ink2:#243743; --paper:#f4f5f1; --panel:#ffffff; --line:#dcdfd8;
+  --text:#1b2a33; --muted:#5d6b73; --teal:#17706e; --teal-d:#105755; --teal-bg:#e1f0ef;
+  --amber:#8a5a00; --amber-bg:#fbf1d9; --red:#b6382c; --red-bg:#fbe6e3; --green:#2c7a4b; --green-bg:#e0f2e7;
+  --radius:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:var(--text);background:var(--paper)}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0}
+h1{font-size:24px} h2{font-size:18px;margin-bottom:10px} h3{font-size:15px;margin-bottom:6px}
+p{margin:0 0 10px}
+a{color:var(--teal-d)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid #7fc3c0;outline-offset:2px}
+[hidden]{display:none!important}
+code,pre,textarea.sql{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+/* Buttons */
+.btn{display:inline-block;border:1px solid var(--line);background:var(--panel);padding:7px 14px;border-radius:var(--radius);cursor:pointer;text-decoration:none;color:var(--text);font-size:14px}
+.btn:hover{border-color:#b7bdb3}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.primary:hover{background:var(--teal-d)}
+.btn.danger{color:var(--red);border-color:#e3b4ae}
+.btn.small{padding:4px 10px;font-size:13px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+
+/* Forms */
+label{display:block;font-weight:600;font-size:14px;margin-bottom:4px}
+input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{width:100%;padding:8px 10px;border:1px solid #c7ccc3;border-radius:var(--radius);background:#fff}
+.field{margin-bottom:14px}
+.hint{color:var(--muted);font-size:13px;margin-top:4px}
+
+/* Login */
+.login{min-height:100%;display:grid;grid-template-columns:1fr 1fr}
+.login-art{background:var(--ink);color:#e9efef;padding:56px;display:flex;flex-direction:column;justify-content:center;gap:22px}
+.login-art h1{font-size:34px;line-height:1.2;color:#fff;max-width:480px}
+.login-art .q{font-family:Georgia,serif;font-size:19px;color:#cfe6e4}
+.login-art pre{background:#0f1a22;border:1px solid #33505a;padding:14px;border-radius:var(--radius);margin:0;overflow:auto;font-size:13px;color:#d7e7e5}
+.login-art .a{border-left:3px solid #4fb3ad;padding-left:12px;color:#d7e7e5}
+.login-form{display:flex;align-items:center;justify-content:center;padding:32px}
+.login-form form{width:100%;max-width:380px}
+.login-form h2{font-size:24px;margin-bottom:16px}
+
+/* App shell */
+#app{display:grid;grid-template-columns:240px 1fr;min-height:100%}
+.side{background:var(--ink);color:#d5dfe0;padding:20px 12px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{font-family:Georgia,serif;font-size:19px;color:#fff;padding:0 10px 14px}
+.brand small{display:block;font-family:"Segoe UI",sans-serif;font-size:12px;color:#8fa6a9}
+.side a{display:block;padding:8px 10px;border-radius:var(--radius);color:#d5dfe0;text-decoration:none;font-size:14.5px}
+.side a:hover{background:var(--ink2)}
+.side a.active{background:var(--teal);color:#fff}
+.side .who{margin-top:auto;padding:12px 10px 0;border-top:1px solid #33505a;font-size:13px;color:#9bb0b3}
+.side .who b{color:#fff;display:block}
+main{min-width:0}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 28px;background:var(--panel);border-bottom:1px solid var(--line)}
+.top h1{margin-right:auto}
+.top select{width:auto}
+#view{padding:24px 28px 60px;max-width:1100px}
+
+/* Panels & tables */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:18px}
+.panel.flat{padding:0;overflow:auto}
+.grid{display:grid;gap:16px}
+.cols2{grid-template-columns:1fr 1fr}
+.cols4{grid-template-columns:repeat(4,1fr)}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.stat b{display:block;font-size:26px;font-family:Georgia,serif}
+.stat span{color:var(--muted);font-size:13px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#f0f2ed;font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);padding:24px;text-align:center}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{justify-content:space-between}
+.muted{color:var(--muted)}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12.5px;background:#eceee9;color:var(--text);white-space:nowrap}
+.badge.ok{background:var(--green-bg);color:var(--green)}
+.badge.warn{background:var(--amber-bg);color:var(--amber)}
+.badge.bad{background:var(--red-bg);color:var(--red)}
+.badge.info{background:var(--teal-bg);color:var(--teal-d)}
+
+/* SQL */
+pre.sql,textarea.sql{background:#13202a;color:#d9e8e6;padding:12px 14px;border-radius:var(--radius);font-size:13px;line-height:1.55;overflow:auto;margin:0 0 10px;border:1px solid #13202a;white-space:pre-wrap}
+textarea.sql{width:100%;min-height:150px;resize:vertical}
+
+/* Chat */
+.chat{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+.msg{max-width:88%;padding:11px 14px;border-radius:var(--radius)}
+.msg.user{align-self:flex-end;background:var(--teal);color:#fff}
+.msg.bot{align-self:flex-start;background:var(--panel);border:1px solid var(--line);width:100%;max-width:100%}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.chip{border:1px solid #b9c7c5;background:var(--teal-bg);color:var(--teal-d);padding:5px 12px;border-radius:99px;cursor:pointer;font-size:13.5px}
+.chip:hover{background:#cfe6e4}
+.qcard{border:1px solid var(--line);border-radius:var(--radius);padding:12px;margin-top:8px;background:#fafbf8}
+.askbar{display:flex;gap:10px;position:sticky;bottom:0;background:var(--paper);padding:10px 0}
+.askbar input{flex:1}
+
+/* Checks */
+.checks{list-style:none;margin:0;padding:0}
+.checks li{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.checks li:last-child{border:0}
+.checks .mark{font-weight:700;width:18px}
+.checks .pass .mark{color:var(--green)} .checks .fail .mark{color:var(--red)}
+.checks small{display:block;color:var(--muted)}
+
+/* Charts */
+.bar{display:grid;grid-template-columns:130px 1fr 90px;gap:10px;align-items:center;margin:6px 0;font-size:14px}
+.bt{background:#e8ece6;border-radius:3px;height:16px}
+.bt i{display:block;height:100%;background:var(--teal);border-radius:3px}
+.bv{text-align:right;font-variant-numeric:tabular-nums}
+svg.line{width:100%;height:auto;max-height:220px}
+.explain{border-left:3px solid var(--teal);padding:4px 12px;background:var(--teal-bg);margin:12px 0;border-radius:0 var(--radius) var(--radius) 0}
+.schema-tbl summary{cursor:pointer;font-weight:600;padding:10px 14px;background:#f0f2ed}
+.schema-tbl{border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;background:#fff}
+.pager{display:flex;gap:10px;align-items:center;padding:10px 14px}
+
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--radius);z-index:10;font-size:14px}
+#toast.err{background:var(--red)}
+
+@media (max-width:860px){
+  .login{grid-template-columns:1fr}
+  .login-art{padding:28px}
+  #app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:10px}
+  .brand,.side .who{display:none}
+  .side a{white-space:nowrap}
+  .cols2,.cols4{grid-template-columns:1fr 1fr}
+  #view,.top{padding-left:16px;padding-right:16px}
+  .bar{grid-template-columns:90px 1fr 70px}
+}
+@media (max-width:520px){ .cols2,.cols4{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login" hidden>
+  <div class="login-art">
+    <h1>Ask your database a question. See the SQL before anything runs.</h1>
+    <div class="q">Which region brought in the most revenue?</div>
+    <pre>SELECT region, SUM(total) AS revenue
+FROM orders o
+JOIN customers c ON c.id = o.customer_id
+WHERE o.status = 'completed'
+GROUP BY region
+ORDER BY revenue DESC</pre>
+    <div class="a">North America leads with $482,000, 35% of total completed revenue.</div>
+  </div>
+  <div class="login-form">
+    <form data-form="login">
+      <h2>Sign in</h2>
+      <div class="field"><label for="lEmail">Work email</label><input id="lEmail" type="email" value="maya@northwind.example" required></div>
+      <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" value="demo-password" required></div>
+      <div class="field"><label for="lRole">Sign in as</label>
+        <select id="lRole">
+          <option>Analyst</option><option>Admin</option><option>Viewer</option><option>Approver</option>
+        </select>
+        <div class="hint">Demo build: no real authentication. You can switch roles later from the top bar.</div>
+      </div>
+      <button class="btn primary" type="submit">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" hidden>
+  <aside class="side">
+    <div class="brand">AI Data Analyst<small>Northwind Traders</small></div>
+    <nav id="nav"></nav>
+    <div class="who"><b id="whoName"></b><span id="whoRole"></span><br><a href="#" data-act="logout" style="padding:6px 0">Sign out</a></div>
+  </aside>
+  <main>
+    <header class="top">
+      <h1 id="pageTitle"></h1>
+      <label for="roleSwitch" class="muted" style="margin:0;font-weight:400">Role</label>
+      <select id="roleSwitch" data-change="role"></select>
+    </header>
+    <section id="view"></section>
+  </main>
+</div>
+<div id="toast" hidden></div>
+
+<script>
+/* =====================================================================
+   AI Data Analyst Platform: frontend (HTML + CSS + vanilla JS)
+   Everything here runs in the browser with mock data. The API object
+   lists the endpoints from the PRD so real calls can replace the mocks.
+   ===================================================================== */
+const API = {
+  dataSources:  '/api/v1/data-sources',            // GET, POST
+  refreshSchema:'/api/v1/data-sources/{id}/refresh-schema',
+  schema:       '/api/v1/data-sources/{id}/schema',
+  conversations:'/api/v1/analyst/conversations',   // POST
+  messages:     '/api/v1/analyst/conversations/{id}/messages',
+  validate:     '/api/v1/queries/{id}/validate',
+  approve:      '/api/v1/queries/{id}/approve',
+  execute:      '/api/v1/queries/{id}/execute',
+  query:        '/api/v1/queries/{id}',
+  results:      '/api/v1/queries/{id}/results',
+  savedQueries: '/api/v1/saved-queries',
+  dashboards:   '/api/v1/dashboards',
+  auditLogs:    '/api/v1/audit-logs'
+};
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = x => JSON.parse(JSON.stringify(x));
+const when = d => new Date(d).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+const MONEY = /revenue|total|spent|price|sales/i;
+function cell(col, v){
+  if (typeof v === 'number') return MONEY.test(col) ? '$' + v.toLocaleString('en-US') : v.toLocaleString('en-US');
+  return esc(v);
+}
+function badge(text, kind){ return `<span class="badge ${kind || ''}">${esc(text)}</span>`; }
+let toastTimer;
+function toast(msg, type){
+  const t = $('#toast'); t.textContent = msg; t.className = type === 'err' ? 'err' : ''; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 2800);
+}
+
+/* ---------- Demo schema (Schema Explorer + SQL policy) ---------- */
+// column: [name, type, description, sensitivity]
+const SCHEMA = [
+  {name:'customers', desc:'One row per customer account.', cols:[
+    ['id','integer','Unique customer ID','public'],
+    ['name','text','Customer or company name','internal'],
+    ['email','text','Primary contact email','confidential'],
+    ['region','text','Sales region','public'],
+    ['created_at','date','Account creation date','internal']]},
+  {name:'orders', desc:'One row per customer order.', cols:[
+    ['id','integer','Unique order ID','public'],
+    ['customer_id','integer','Links to customers.id','public'],
+    ['total','numeric','Order value in USD','internal'],
+    ['status','text','completed, pending, shipped or cancelled','public'],
+    ['created_at','date','Order date','public']]},
+  {name:'order_items', desc:'Products inside each order.', cols:[
+    ['id','integer','Unique line ID','public'],
+    ['order_id','integer','Links to orders.id','public'],
+    ['product_id','integer','Links to products.id','public'],
+    ['quantity','integer','Units ordered','public']]},
+  {name:'products', desc:'Product catalogue.', cols:[
+    ['id','integer','Unique product ID','public'],
+    ['name','text','Product name','public'],
+    ['category','text','Product category','public'],
+    ['price','numeric','List price in USD','internal']]},
+  {name:'employees', protected:true, desc:'HR records. Blocked for every role.', cols:[
+    ['id','integer','Employee ID','internal'],
+    ['name','text','Employee name','internal'],
+    ['salary','numeric','Annual salary','restricted'],
+    ['ssn','text','National ID number','restricted']]}
+];
+const RELATIONS = [
+  ['orders.customer_id','customers.id'],
+  ['order_items.order_id','orders.id'],
+  ['order_items.product_id','products.id']
+];
+const SENS_KIND = {public:'ok', internal:'info', confidential:'warn', restricted:'bad'};
+
+/* ---------- Demo data returned by the "database" ---------- */
+const TABLE_DATA = {
+  customers:[
+    {id:1,name:'Northwind Traders',email:'orders@northwind.example',region:'North America',created_at:'2023-02-11'},
+    {id:2,name:'Acme Corp',email:'buyer@acme.example',region:'Europe',created_at:'2023-04-02'},
+    {id:3,name:'Globex',email:'ap@globex.example',region:'Asia Pacific',created_at:'2023-06-19'},
+    {id:4,name:'Initech',email:'ops@initech.example',region:'North America',created_at:'2024-01-08'},
+    {id:5,name:'Umbrella Ltd',email:'hello@umbrella.example',region:'Europe',created_at:'2024-03-27'},
+    {id:6,name:'Stark Supply',email:'sales@stark.example',region:'Latin America',created_at:'2024-09-14'}],
+  orders:[
+    {id:1001,customer_id:1,total:12400,status:'completed',created_at:'2026-09-02'},
+    {id:1002,customer_id:2,total:8800,status:'shipped',created_at:'2026-09-05'},
+    {id:1003,customer_id:3,total:15300,status:'completed',created_at:'2026-09-09'},
+    {id:1004,customer_id:4,total:4200,status:'pending',created_at:'2026-09-14'},
+    {id:1005,customer_id:5,total:9700,status:'completed',created_at:'2026-09-21'},
+    {id:1006,customer_id:6,total:2300,status:'cancelled',created_at:'2026-09-28'}],
+  order_items:[
+    {id:1,order_id:1001,product_id:1,quantity:4},{id:2,order_id:1002,product_id:3,quantity:10},
+    {id:3,order_id:1003,product_id:2,quantity:6},{id:4,order_id:1005,product_id:4,quantity:2}],
+  products:[
+    {id:1,name:'Studio Headphones',category:'Electronics',price:249},
+    {id:2,name:'Standing Desk',category:'Home',price:520},
+    {id:3,name:'Trail Jacket',category:'Apparel',price:140},
+    {id:4,name:'Camp Stove',category:'Outdoor',price:89}]
+};
+
+/* ---------- Question templates: the mock "LLM" ---------- */
+const TPL = {
+  region:{
+    title:'Revenue by region', match:/region|country|geograph/,
+    sql:"SELECT region, SUM(total) AS revenue\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nWHERE o.status = 'completed'\nGROUP BY region\nORDER BY revenue DESC",
+    plan:{metric:'SUM(orders.total)', dimension:'customers.region', filters:["orders.status = 'completed'"], sort:'revenue desc'},
+    data:()=>[['North America',482000],['Europe',351000],['Asia Pacific',297000],['Latin America',118000],['Middle East',76000]].map(r=>({region:r[0],revenue:r[1]}))},
+  monthly:{
+    title:'Monthly revenue trend', match:/month|trend|over time|growth/,
+    sql:"SELECT TO_CHAR(created_at, 'Mon YYYY') AS month, SUM(total) AS revenue\nFROM orders\nWHERE status = 'completed'\n  AND created_at >= CURRENT_DATE - INTERVAL '12 months'\nGROUP BY 1\nORDER BY MIN(created_at)",
+    plan:{metric:'SUM(orders.total)', dimension:'month of orders.created_at', filters:["orders.status = 'completed'",'last 12 months'], sort:'month asc'},
+    data:()=>{const m=['Nov 2025','Dec 2025','Jan 2026','Feb 2026','Mar 2026','Apr 2026','May 2026','Jun 2026','Jul 2026','Aug 2026','Sep 2026','Oct 2026'];
+      const v=[61000,64500,59800,68200,71500,70100,76400,79900,83200,81600,88700,92300]; return m.map((x,i)=>({month:x,revenue:v[i]}));}},
+  customers:{
+    title:'Top customers by spend', match:/customer|client|buyer/,
+    sql:"SELECT c.name AS customer, SUM(o.total) AS total_spent\nFROM orders o\nJOIN customers c ON c.id = o.customer_id\nWHERE o.status = 'completed'\nGROUP BY c.name\nORDER BY total_spent DESC\nLIMIT 8",
+    plan:{metric:'SUM(orders.total)', dimension:'customers.name', filters:["orders.status = 'completed'"], sort:'total_spent desc', limit:8},
+    data:()=>[['Northwind Traders',48200],['Acme Corp',45100],['Globex',39800],['Initech',31400],['Umbrella Ltd',28900],['Stark Supply',24300],['Wayne Retail',21700],['Hooli',19800]].map(r=>({customer:r[0],total_spent:r[1]}))},
+  status:{
+    title:'Orders by status', match:/status|cancel|pending|shipped/,
+    sql:"SELECT status, COUNT(*) AS orders\nFROM orders\nGROUP BY status\nORDER BY orders DESC",
+    plan:{metric:'COUNT(orders.id)', dimension:'orders.status', filters:[], sort:'orders desc'},
+    data:()=>[['completed',1842],['shipped',396],['pending',213],['cancelled',97]].map(r=>({status:r[0],orders:r[1]}))},
+  category:{
+    title:'Revenue by product category', match:/categor|product|item/,
+    sql:"SELECT p.category, SUM(oi.quantity * p.price) AS revenue\nFROM order_items oi\nJOIN products p ON p.id = oi.product_id\nGROUP BY p.category\nORDER BY revenue DESC",
+    plan:{metric:'SUM(order_items.quantity * products.price)', dimension:'products.category', filters:[], sort:'revenue desc'},
+    data:()=>[['Electronics',214000],['Home',168000],['Apparel',131000],['Outdoor',97000],['Toys',58000]].map(r=>({category:r[0],revenue:r[1]}))},
+  emails:{
+    title:'Customer contact list', match:/e-?mail|contact list/,
+    sql:"SELECT name, email, region\nFROM customers\nORDER BY name\nLIMIT 50",
+    plan:{metric:'none', dimension:'customers.name, customers.email', filters:[], sort:'name asc', limit:50},
+    data:()=>TABLE_DATA.customers.map(c=>({name:c.name,email:c.email,region:c.region}))},
+  salary:{
+    title:'Employee salaries', match:/salar|payroll|employee|compensation/,
+    sql:"SELECT name, salary\nFROM employees\nORDER BY salary DESC\nLIMIT 10",
+    plan:{metric:'employees.salary', dimension:'employees.name', filters:[], sort:'salary desc', limit:10},
+    data:()=>[]}
+};
+const TPL_ORDER = ['salary','emails','status','monthly','region','customers','category'];
+const SUGGESTIONS = ['Revenue by region','Monthly revenue trend','Top customers by spend','Orders by status','Revenue by product category','Show customer emails'];
+
+/* ---------- App state ---------- */
+const ROLES = ['Admin','Analyst','Viewer','Approver'];
+const state = {
+  user:null, role:'Analyst', dsId:'ds1',
+  settings:{rowLimit:1000, timeout:30, retention:90, joinThreshold:3},
+  dataSources:[
+    {id:'ds1', name:'Sales warehouse', type:'PostgreSQL', status:'Connected', host:'warehouse.northwind.example', db:'sales', refreshed:new Date(Date.now()-86400000*2)}],
+  queries:[], saved:[], dashboards:[], approvals:[], audit:[], messages:[], seq:1001, idSeq:1,
+  usage:{runs:0, rejected:0, tokens:0},
+  daily:[14,22,19,31,27,12,9],   // seeded queries per day, last entry = today
+  busy:false, resPage:1, auditFilter:'all'
+};
+const nextId = p => p + (state.idSeq++);
+const getQ = id => state.queries.find(q => q.id === id);
+
+function log(action, type, id, meta, date, actor){
+  state.audit.unshift({id:nextId('A'), time:date || new Date(), actor:actor || (state.user ? state.user.name : 'system'), action, type, entity:id, meta:meta || ''});
+}
+
+/* ---------- SQL validation: mirrors the policy checks in the PRD ---------- */
+function validateSQL(sql){
+  const checks = []; const reasons = [];
+  const add = (name, pass, detail) => checks.push({name, pass, detail});
+  const clean = sql.trim().replace(/;\s*$/, '');
+  const bare = clean.replace(/'[^']*'/g, "''");
+  const lower = bare.toLowerCase();
+
+  add('Single statement', !bare.includes(';'), bare.includes(';') ? 'Query chaining is not allowed.' : 'One statement found.');
+  add('Read-only statement', /^(select|with)\b/i.test(clean), /^(select|with)\b/i.test(clean) ? 'Starts with SELECT.' : 'Only SELECT queries are allowed.');
+  const bad = [...new Set((bare.match(/\b(insert|update|delete|drop|alter|truncate|grant|revoke|copy|create)\b/ig) || []).map(x => x.toUpperCase()))];
+  add('No prohibited operations', !bad.length, bad.length ? 'Found ' + bad.join(', ') + '.' : 'No write or admin keywords found.');
+
+  const tables = [...bare.matchAll(/\b(?:from|join)\s+([a-z_][\w.]*)/ig)].map(m => m[1].toLowerCase().split('.').pop());
+  const known = SCHEMA.map(t => t.name);
+  const unknown = tables.filter(t => !known.includes(t));
+  add('Tables exist in the schema', tables.length > 0 && !unknown.length,
+    !tables.length ? 'No table found.' : unknown.length ? 'Unknown: ' + unknown.join(', ') + '.' : 'Tables: ' + [...new Set(tables)].join(', ') + '.');
+
+  const blocked = [];
+  tables.forEach(t => { const s = SCHEMA.find(x => x.name === t); if (s && s.protected) blocked.push(t); });
+  SCHEMA.forEach(t => t.cols.forEach(c => { if (c[3] === 'restricted' && new RegExp('\\b' + c[0] + '\\b').test(lower)) blocked.push(t.name + '.' + c[0]); }));
+  add('Permission check', !blocked.length, blocked.length ? 'Blocked: ' + [...new Set(blocked)].join(', ') + ' (restricted).' : 'No protected tables or columns.');
+
+  const hasLimit = /\blimit\s+\d+/i.test(bare);
+  add('Row limit', true, hasLimit ? 'LIMIT found.' : 'LIMIT ' + state.settings.rowLimit + ' will be applied.');
+
+  // Approval triggers
+  const star = /select\s+(distinct\s+)?([\w.]+\.)?\*/i.test(bare);
+  const confCols = [];
+  tables.forEach(t => { const s = SCHEMA.find(x => x.name === t); if (!s) return;
+    s.cols.forEach(c => { if (c[3] === 'confidential' && (star || new RegExp('\\b' + c[0] + '\\b').test(lower))) confCols.push(t + '.' + c[0]); }); });
+  if (confCols.length) reasons.push('Reads confidential data: ' + [...new Set(confCols)].join(', '));
+  if (new Set(tables).size >= state.settings.joinThreshold) reasons.push('Joins ' + new Set(tables).size + ' tables (estimated high cost)');
+
+  return {ok: checks.every(c => c.pass), checks, needsApproval: reasons.length > 0, reasons};
+}
+
+/* ---------- Mock "database" engine ---------- */
+function limitOf(sql){
+  const m = sql.match(/\blimit\s+(\d+)/i);
+  return Math.min(m ? +m[1] : Infinity, state.settings.rowLimit);
+}
+function engine(sql){   // edited SQL: returns sample rows from the first table, with selected columns
+  const t = (sql.match(/\b(?:from)\s+([a-z_][\w.]*)/i) || [])[1];
+  const data = clone(TABLE_DATA[(t || '').toLowerCase().split('.').pop()] || []);
+  const m = sql.match(/select\s+(.+?)\s+from\s/is);
+  if (m && data.length && m[1].trim() !== '*'){
+    const cols = m[1].split(',').map(c => c.trim().split(/\s+as\s+/i)[0].split('.').pop().replace(/\W/g, '')).filter(c => c in data[0]);
+    if (cols.length) return data.map(r => Object.fromEntries(cols.map(c => [c, r[c]])));
+  }
+  return data;
+}
+
+/* ---------- Results helpers: chart recommender + grounded explanation ---------- */
+function chartFor(q){
+  const rows = q.rows || []; if (rows.length < 2) return null;
+  const keys = Object.keys(rows[0]);
+  const num = keys.find(k => typeof rows[0][k] === 'number' && !/(^id$|_id$)/.test(k));
+  const lab = keys.find(k => typeof rows[0][k] === 'string');
+  if (!num || !lab || rows.length > 12) return null;
+  return {type: /month|date/i.test(lab) ? 'line' : 'bar', lab, num};
+}
+function explain(q){
+  const rows = q.rows;
+  if (!rows.length) return 'The query returned no rows.';
+  const c = chartFor(q);
+  if (!c) return `The query returned ${rows.length} row${rows.length > 1 ? 's' : ''} with columns ${Object.keys(rows[0]).join(', ')}.`;
+  const total = rows.reduce((s, r) => s + r[c.num], 0);
+  const sorted = [...rows].sort((a, b) => b[c.num] - a[c.num]);
+  const top = sorted[0], low = sorted[sorted.length - 1];
+  let t = `${top[c.lab]} is highest at ${cell(c.num, top[c.num])}, ${Math.round(top[c.num] / total * 100)}% of the ${cell(c.num, total)} total. ${low[c.lab]} is lowest at ${cell(c.num, low[c.num])}.`;
+  if (c.type === 'line'){
+    const a = rows[0][c.num], b = rows[rows.length - 1][c.num];
+    t += ` From ${rows[0][c.lab]} to ${rows[rows.length - 1][c.lab]}, the value changed by ${Math.round((b - a) / a * 100)}%.`;
+  }
+  return t + ' This summary uses only the rows returned by the query.';
+}
+function chartHTML(rows, c){
+  if (!c) return '';
+  if (c.type === 'bar'){
+    const max = Math.max(...rows.map(r => r[c.num]));
+    return '<div role="img" aria-label="Bar chart">' + rows.map(r =>
+      `<div class="bar"><span>${esc(r[c.lab])}</span><div class="bt"><i style="width:${(r[c.num] / max * 100).toFixed(1)}%"></i></div><span class="bv">${cell(c.num, r[c.num])}</span></div>`).join('') + '</div>';
+  }
+  const W = 600, H = 200, p = 34, vals = rows.map(r => r[c.num]), max = Math.max(...vals), min = Math.min(...vals);
+  const x = i => p + i * (W - 2 * p) / (rows.length - 1 || 1);
+  const y = v => H - p - (v - min) / (max - min || 1) * (H - 2 * p);
+  const pts = rows.map((r, i) => x(i).toFixed(1) + ',' + y(r[c.num]).toFixed(1)).join(' ');
+  return `<svg class="line" viewBox="0 0 ${W} ${H}" role="img" aria-label="Line chart of ${esc(c.num)} by ${esc(c.lab)}">
+    <line x1="${p}" y1="${H - p}" x2="${W - p}" y2="${H - p}" stroke="#c9cec6"/>
+    <polyline points="${pts}" fill="none" stroke="#17706e" stroke-width="2.5"/>
+    ${rows.map((r, i) => `<circle cx="${x(i)}" cy="${y(r[c.num])}" r="3.5" fill="#17706e"/>${i % 2 === 0 ? `<text x="${x(i)}" y="${H - 12}" font-size="11" text-anchor="middle" fill="#5d6b73">${esc(String(r[c.lab]).split(' ')[0])}</text>` : ''}`).join('')}
+    <text x="4" y="${y(max) + 4}" font-size="11" fill="#5d6b73">${cell(c.num, max)}</text>
+    <text x="4" y="${y(min) + 4}" font-size="11" fill="#5d6b73">${cell(c.num, min)}</text></svg>`;
+}
+function tableHTML(rows, from, to){
+  if (!rows.length) return '<div class="empty">No rows returned.</div>';
+  const keys = Object.keys(rows[0]);
+  return `<table><thead><tr>${keys.map(k => `<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>` +
+    rows.slice(from, to).map(r => '<tr>' + keys.map(k => `<td class="${typeof r[k] === 'number' ? 'num' : ''}">${cell(k, r[k])}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+}
+
+/* ---------- Query lifecycle ---------- */
+function makeQuery({question, tpl, sql, edited}){
+  const q = {id:nextId('Q-'), question, tpl, sql, edited:!!edited, draft:sql, createdAt:new Date(), user:state.user ? state.user.name : 'system',
+    ds:state.dsId, execution:'not_run', approval:'none', rows:null, duration:null};
+  q.id = 'Q-' + (state.seq++);
+  applyValidation(q);
+  return q;
+}
+function applyValidation(q){
+  q.validation = validateSQL(q.sql);
+  if (q.approval === 'none' || q.approval === 'required') q.approval = q.validation.ok && q.validation.needsApproval ? 'required' : 'none';
+}
+function syncDraft(q){
+  if (q.draft !== q.sql){ q.sql = q.draft; q.edited = q.sql !== (TPL[q.tpl] ? TPL[q.tpl].sql : ''); if (q.approval === 'approved') q.approval = 'required'; q.execution = 'not_run'; applyValidation(q);
+    log('sql_edited', 'query', q.id, 'SQL changed by user'); }
+}
+function runQuery(id){
+  const q = getQ(id); if (!q) return;
+  if (!q.validation.ok) return toast('Validation failed. Fix the SQL before running.', 'err');
+  if (!['none', 'approved'].includes(q.approval)) return toast('This query needs approval first.', 'err');
+  q.execution = 'running'; render();
+  setTimeout(() => {
+    q.duration = Math.round(90 + Math.random() * 650);
+    let rows = q.edited || !TPL[q.tpl] ? engine(q.sql) : TPL[q.tpl].data();
+    q.rows = rows.slice(0, limitOf(q.sql));
+    q.execution = 'success'; q.executedAt = new Date();
+    q.chart = chartFor(q); q.explanation = explain(q);
+    state.usage.runs++; state.usage.tokens += 1100 + q.sql.length * 2; state.daily[state.daily.length - 1]++;
+    log('query_executed', 'query', q.id, q.rows.length + ' rows in ' + q.duration + ' ms (read-only role)');
+    render(); toast('Query finished in ' + q.duration + ' ms');
+  }, 600);
+}
+function requestApproval(id){
+  const q = getQ(id); q.approval = 'pending';
+  state.approvals.unshift({id:nextId('P'), qid:q.id, requestedBy:state.user.name, approvedBy:'', status:'pending', reason:q.validation.reasons.join('; '), time:new Date()});
+  log('approval_requested', 'query', q.id, q.validation.reasons.join('; '));
+  render(); toast('Approval requested');
+}
+function decide(approvalId, status){
+  const a = state.approvals.find(x => x.id === approvalId); a.status = status; a.approvedBy = state.user.name; a.decidedAt = new Date();
+  const q = getQ(a.qid); q.approval = status;
+  log('approval_' + status, 'query', q.id, 'Decision by ' + state.user.name);
+  render(); toast('Query ' + status);
+}
+function saveQuery(id){
+  const q = getQ(id); syncDraft(q);
+  const name = prompt('Name for this saved query', q.question.length > 60 ? TPL[q.tpl]?.title || 'Saved query' : q.question);
+  if (!name) return;
+  state.saved.unshift({id:nextId('S'), name, sql:q.sql, tpl:q.tpl, edited:q.edited, owner:state.user.name, ds:q.ds, question:q.question});
+  log('query_saved', 'saved_query', q.id, name); toast('Saved'); render();
+}
+function runSaved(sid){
+  const s = state.saved.find(x => x.id === sid);
+  const q = makeQuery({question:s.name, tpl:s.tpl, sql:s.sql, edited:s.edited});
+  state.queries.unshift(q); state.resPage = 1;
+  log('saved_query_run', 'saved_query', s.id, 'Created ' + q.id);
+  location.hash = '#/results/' + q.id;
+  if (q.approval === 'none' && q.validation.ok) runQuery(q.id);
+}
+
+/* ---------- Chat: question to query plan ---------- */
+function generate(text){
+  const t = text.toLowerCase();
+  if (/\b(delete|drop|truncate|update|insert|remove|alter|wipe)\b/.test(t))
+    return {type:'refuse', text:'I can only read data. Changing or deleting records is not supported, and the executor would reject it anyway. Try asking for a summary instead.'};
+  for (const k of TPL_ORDER) if (TPL[k].match.test(t)) return {type:'query', key:k};
+  if (/revenue|sales|orders|spend|money/.test(t))
+    return {type:'clarify', text:'I can break that down in a few ways. Which one do you want?', chips:['Revenue by region','Monthly revenue trend','Revenue by product category']};
+  return {type:'clarify', text:'I am not sure which data you mean. Try one of these, or name a table and a metric.', chips:SUGGESTIONS};
+}
+function ask(text){
+  text = text.trim(); if (!text || state.busy) return;
+  const ds = state.dataSources.find(d => d.id === state.dsId);
+  state.messages.push({role:'user', text});
+  log('question_submitted', 'conversation', ds.id, text);
+  state.busy = true; render();
+  setTimeout(() => {
+    const g = generate(text);
+    if (g.type === 'query'){
+      const t = TPL[g.key];
+      const q = makeQuery({question:text, tpl:g.key, sql:t.sql});
+      state.queries.unshift(q);
+      state.usage.tokens += 650 + text.length;
+      log('sql_generated', 'query', q.id, t.title);
+      let msg = `Here is the SQL for "${t.title}". It was checked before anything runs.`;
+      if (!q.validation.ok) { msg = 'I wrote a query, but the policy check blocked it.'; state.usage.rejected++; log('sql_rejected', 'query', q.id, q.validation.checks.filter(c => !c.pass).map(c => c.detail).join(' ')); }
+      else if (q.approval === 'required') msg += ' A person has to approve it first: ' + q.validation.reasons.join('; ') + '.';
+      state.messages.push({role:'bot', text:msg, qid:q.id});
+    } else state.messages.push({role:'bot', text:g.text, chips:g.chips});
+    state.busy = false; render();
+    const c = $('#chatEnd'); if (c) c.scrollIntoView({block:'end'});
+  }, 700);
+}
+
+/* ---------- Page renderers ---------- */
+const NAV = [
+  ['home','Dashboard',ROLES],
+  ['chat','AI analyst',['Admin','Analyst']],
+  ['datasources','Data sources',['Admin','Analyst']],
+  ['schema','Schema explorer',['Admin','Analyst']],
+  ['saved','Saved queries',['Admin','Analyst','Viewer']],
+  ['dashboards','Dashboards',ROLES],
+  ['approvals','Approvals',['Admin','Approver']],
+  ['usage','Usage',['Admin']],
+  ['audit','Audit logs',['Admin']],
+  ['settings','Settings',['Admin']]
+];
+const EXTRA = {query:['Admin','Analyst','Approver'], results:ROLES};
+const canEdit = () => ['Admin','Analyst'].includes(state.role);
+
+function approvalBadge(q){
+  return {none:badge('No approval needed','ok'), required:badge('Approval required','warn'), pending:badge('Awaiting approval','warn'), approved:badge('Approved','ok'), rejected:badge('Rejected','bad')}[q.approval];
+}
+function validationBadge(q){ return q.validation.ok ? badge('Validation passed','ok') : badge('Validation failed','bad'); }
+function execBadge(q){
+  return {not_run:badge('Not run'), running:badge('Running','info'), success:badge('Succeeded','ok')}[q.execution];
+}
+function runButton(q, small){
+  const s = small ? ' small' : '';
+  if (!q.validation.ok) return '';
+  if (q.execution === 'running') return `<button class="btn${s}" disabled>Running...</button>`;
+  if (q.approval === 'required') return `<button class="btn primary${s}" data-act="req-approval" data-id="${q.id}">Request approval</button>`;
+  if (q.approval === 'pending') return `<button class="btn${s}" disabled>Waiting for approval</button>`;
+  if (q.approval === 'rejected') return '';
+  return `<button class="btn primary${s}" data-act="run" data-id="${q.id}">${q.execution === 'success' ? 'Run again' : 'Run query'}</button>`;
+}
+
+const PAGES = {
+  home(){
+    const done = state.queries.filter(q => q.execution === 'success');
+    const avg = done.length ? Math.round(done.reduce((s, q) => s + q.duration, 0) / done.length) : 0;
+    const pending = state.approvals.filter(a => a.status === 'pending').length;
+    const recent = state.queries.slice(0, 6);
+    return {title:'Dashboard', html:`
+      <div class="grid cols4" style="margin-bottom:18px">
+        <div class="stat"><b>${done.length}</b><span>Queries run</span></div>
+        <div class="stat"><b>${pending}</b><span>Waiting for approval</span></div>
+        <div class="stat"><b>${state.dataSources.length}</b><span>Data sources</span></div>
+        <div class="stat"><b>${avg} ms</b><span>Average query time</span></div>
+      </div>
+      ${canEdit() ? `<div class="panel row spread"><div><h3>Ask a question</h3><span class="muted">Type a question in plain English and review the SQL before it runs.</span></div><a class="btn primary" href="#/chat">Open AI analyst</a></div>` : ''}
+      <h2>Recent queries</h2>
+      <div class="panel flat">${recent.length ? `<table><thead><tr><th>Question</th><th>Status</th><th>Rows</th><th>Time</th><th></th></tr></thead><tbody>${recent.map(q => `<tr>
+        <td>${esc(q.question)}</td><td>${validationBadge(q)} ${execBadge(q)}</td><td class="num">${q.rows ? q.rows.length : '-'}</td><td>${when(q.createdAt)}</td>
+        <td>${state.role === 'Viewer' ? '' : `<a href="#/query/${q.id}">Details</a>`}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No queries yet.</div>'}</div>`};
+  },
+
+  datasources(){
+    const isAdmin = state.role === 'Admin';
+    return {title:'Data sources', html:`
+      <div class="panel flat"><table><thead><tr><th>Name</th><th>Type</th><th>Host</th><th>Status</th><th>Schema refreshed</th><th></th></tr></thead><tbody>
+      ${state.dataSources.map(d => `<tr><td>${esc(d.name)}</td><td>${esc(d.type)}</td><td>${esc(d.host)}/${esc(d.db)}</td>
+        <td>${badge(d.status, d.status === 'Connected' ? 'ok' : 'warn')}</td><td>${d.refreshed ? when(d.refreshed) : 'Never'}</td>
+        <td><button class="btn small" data-act="refresh" data-id="${d.id}">Refresh schema</button></td></tr>`).join('')}
+      </tbody></table></div>
+      ${isAdmin ? `<div class="panel"><h2>Add a connection</h2>
+        <form data-form="datasource" class="grid cols2">
+          <div class="field"><label for="dName">Name</label><input id="dName" type="text" required placeholder="Marketing warehouse"></div>
+          <div class="field"><label for="dType">Type</label><select id="dType"><option>PostgreSQL</option><option>MySQL</option><option>SQL Server</option></select></div>
+          <div class="field"><label for="dHost">Host</label><input id="dHost" type="text" required placeholder="db.example.com"></div>
+          <div class="field"><label for="dDb">Database</label><input id="dDb" type="text" required placeholder="analytics"></div>
+          <div class="field"><label for="dUser">Read-only username</label><input id="dUser" type="text" required></div>
+          <div class="field"><label for="dPass">Password</label><input id="dPass" type="password" required></div>
+          <div style="grid-column:1/-1"><p class="hint">Credentials go to the server, are stored encrypted, and are never shown again or shared with the AI model. Use a database role that can only read.</p>
+          <button class="btn primary" type="submit">Save connection</button></div>
+        </form></div>` : '<p class="muted">Only admins can add or change connections.</p>'}`};
+  },
+
+  schema(){
+    const ds = state.dataSources.find(d => d.id === state.dsId);
+    const loaded = ds.status === 'Connected';
+    return {title:'Schema explorer', html:`
+      <div class="row" style="margin-bottom:14px">
+        <select id="dsPick" data-change="ds" style="max-width:260px">${state.dataSources.map(d => `<option value="${d.id}" ${d.id === state.dsId ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
+        <input type="text" id="schemaSearch" data-filter="schema" placeholder="Search tables and columns" style="max-width:280px">
+        <span class="muted">Refreshed ${ds.refreshed ? when(ds.refreshed) : 'never'}</span>
+      </div>
+      ${loaded ? SCHEMA.map((t, i) => `<details class="schema-tbl" data-name="${esc((t.name + ' ' + t.cols.map(c => c[0]).join(' ')).toLowerCase())}" ${i === 0 ? 'open' : ''}>
+        <summary>${esc(t.name)} ${t.protected ? badge('Blocked', 'bad') : ''} <span class="muted" style="font-weight:400">${esc(t.desc)}</span></summary>
+        <table><thead><tr><th>Column</th><th>Type</th><th>Business definition</th><th>Sensitivity</th></tr></thead><tbody>
+        ${t.cols.map(c => `<tr><td><code>${esc(c[0])}</code></td><td>${esc(c[1])}</td><td>${esc(c[2])}</td><td>${badge(c[3], SENS_KIND[c[3]])}</td></tr>`).join('')}</tbody></table></details>`).join('') +
+        `<h2 style="margin-top:20px">Relationships</h2><div class="panel">${RELATIONS.map(r => `<div><code>${r[0]}</code> references <code>${r[1]}</code></div>`).join('')}</div>`
+        : '<div class="panel empty">This source has no schema yet. Go to Data sources and refresh its schema.</div>'}`};
+  },
+
+  chat(){
+    const ds = state.dataSources.find(d => d.id === state.dsId);
+    return {title:'AI analyst', html:`
+      <div class="row" style="margin-bottom:14px"><label for="dsPick" style="margin:0">Data source</label>
+        <select id="dsPick" data-change="ds" style="max-width:260px">${state.dataSources.map(d => `<option value="${d.id}" ${d.id === state.dsId ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>
+        <button class="btn small" data-act="clear-chat">New conversation</button></div>
+      <div class="chat">
+        <div class="msg bot"><p>Ask a question about <b>${esc(ds.name)}</b>. I will write the SQL, check it against your permissions, and only run it when you press Run.</p>
+          ${!state.messages.length ? `<div class="chips">${SUGGESTIONS.map(s => `<button class="chip" data-act="suggest" data-text="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}</div>
+        ${state.messages.map(msgHTML).join('')}
+        ${state.busy ? '<div class="msg bot muted">Reading the schema and writing SQL...</div>' : ''}
+        <div id="chatEnd"></div>
+      </div>
+      <form class="askbar" data-form="ask"><input type="text" id="askInput" placeholder="For example: Which region has the most revenue?" aria-label="Your question" autocomplete="off" ${ds.status !== 'Connected' ? 'disabled' : ''}>
+        <button class="btn primary" type="submit" ${state.busy || ds.status !== 'Connected' ? 'disabled' : ''}>Ask</button></form>`};
+  },
+
+  query(id){
+    const q = getQ(id); if (!q) return {title:'Query', html:'<div class="panel empty">Query not found.</div>'};
+    const ed = canEdit();
+    return {title:'Query ' + q.id, html:`
+      <p class="muted"><a href="#/${ed ? 'chat' : 'approvals'}">&larr; Back</a></p>
+      <div class="panel"><h2>${esc(q.question)}</h2>
+        <div class="row">${validationBadge(q)} ${approvalBadge(q)} ${execBadge(q)} <span class="muted">Asked by ${esc(q.user)} on ${when(q.createdAt)}</span></div></div>
+      <div class="panel"><h2>Generated SQL</h2>
+        ${ed ? `<textarea class="sql" id="sqlEdit" data-draft="${q.id}" spellcheck="false" aria-label="SQL editor">${esc(q.draft)}</textarea>
+          <div class="row"><button class="btn" data-act="validate" data-id="${q.id}">Validate</button>
+          <button class="btn" data-act="regen" data-id="${q.id}">Regenerate</button>
+          ${runButton(q)} <button class="btn" data-act="save" data-id="${q.id}">Save query</button></div>
+          <p class="hint">You can edit the SQL. It is validated again before it runs, and it can only use data you have access to. Demo engine: edited SQL returns sample rows from the first table.</p>`
+        : `<pre class="sql">${esc(q.sql)}</pre>${q.approval === 'pending' ? '<p class="hint">Review the SQL, then decide on the Approvals page.</p>' : ''}`}</div>
+      <div class="grid cols2">
+        <div class="panel"><h2>Validation</h2><ul class="checks">${q.validation.checks.map(c => `<li class="${c.pass ? 'pass' : 'fail'}"><span class="mark">${c.pass ? '&#10003;' : '&#10005;'}</span><div>${esc(c.name)}<small>${esc(c.detail)}</small></div></li>`).join('')}</ul>
+          ${q.validation.reasons.length ? `<p class="hint" style="margin-top:10px">Approval needed: ${esc(q.validation.reasons.join('; '))}.</p>` : ''}</div>
+        <div class="panel"><h2>Execution</h2>
+          <table><tbody>
+            <tr><th>Status</th><td>${execBadge(q)}</td></tr>
+            <tr><th>Duration</th><td>${q.duration ? q.duration + ' ms' : '-'}</td></tr>
+            <tr><th>Row count</th><td>${q.rows ? q.rows.length : '-'}</td></tr>
+            <tr><th>Timeout</th><td>${state.settings.timeout} s</td></tr>
+            <tr><th>Database role</th><td>read-only</td></tr></tbody></table>
+          ${TPL[q.tpl] ? `<h3 style="margin-top:12px">Query plan</h3><pre class="sql">${esc(JSON.stringify(TPL[q.tpl].plan, null, 2))}</pre>` : ''}</div>
+      </div>
+      <div class="panel"><div class="row spread"><h2>Result preview</h2>${q.rows ? `<a class="btn small" href="#/results/${q.id}">Open full results</a>` : ''}</div>
+        ${q.rows ? tableHTML(q.rows, 0, 5) : '<div class="empty">Run the query to see a preview.</div>'}</div>`};
+  },
+
+  results(id){
+    const q = getQ(id); if (!q) return {title:'Results', html:'<div class="panel empty">Results not found.</div>'};
+    if (q.execution !== 'success') return {title:'Results', html:`<div class="panel"><h2>${esc(q.question)}</h2><div class="row">${validationBadge(q)} ${approvalBadge(q)} ${execBadge(q)}</div><p style="margin-top:12px">${!q.validation.ok ? 'This query did not pass validation.' : 'This query has not run yet.'}</p>${runButton(q)}</div>`};
+    const size = 5, pages = Math.max(1, Math.ceil(q.rows.length / size)), p = Math.min(state.resPage, pages);
+    return {title:'Results', html:`
+      <p class="muted">${state.role === 'Viewer' ? '<a href="#/saved">&larr; Saved queries</a>' : `<a href="#/query/${q.id}">&larr; Query details</a>`}</p>
+      <div class="panel"><h2>${esc(q.question)}</h2>
+        <div class="row"><span class="badge info">${q.rows.length} rows</span><span class="badge">${q.duration} ms</span><span class="muted">Ran ${when(q.executedAt)}</span>
+        <span style="margin-left:auto" class="row"><button class="btn small" data-act="csv" data-id="${q.id}">Download CSV</button>${canEdit() ? `<button class="btn small" data-act="save" data-id="${q.id}">Save query</button>` : ''}${runButton(q, true)}</span></div>
+        ${q.chart ? `<div style="margin-top:16px">${chartHTML(q.rows, q.chart)}</div>` : ''}
+        <div class="explain"><b>Explanation</b><br>${esc(q.explanation)}</div></div>
+      <div class="panel flat">${tableHTML(q.rows, (p - 1) * size, p * size)}
+        <div class="pager"><button class="btn small" data-act="page" data-dir="-1" ${p <= 1 ? 'disabled' : ''}>Previous</button>
+        <span>Page ${p} of ${pages}</span><button class="btn small" data-act="page" data-dir="1" ${p >= pages ? 'disabled' : ''}>Next</button></div></div>`};
+  },
+
+  saved(){
+    return {title:'Saved queries', html: state.saved.length ? `<div class="panel flat"><table><thead><tr><th>Name</th><th>Owner</th><th>SQL</th><th></th></tr></thead><tbody>
+      ${state.saved.map(s => `<tr><td>${esc(s.name)}</td><td>${esc(s.owner)}</td><td><code>${esc(s.sql.split('\n')[0])}...</code></td>
+        <td class="row"><button class="btn small primary" data-act="run-saved" data-id="${s.id}">Run</button>
+        ${canEdit() ? `<button class="btn small danger" data-act="del-saved" data-id="${s.id}">Delete</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`
+      : '<div class="panel empty">No saved queries yet. Run a query in the AI analyst and choose Save query.</div>'};
+  },
+
+  dashboards(){
+    const widget = s => {
+      const rows = (TPL[s.tpl] && !s.edited ? TPL[s.tpl].data() : engine(s.sql)).slice(0, limitOf(s.sql));
+      const c = chartFor({rows});
+      return `<div class="panel"><h3>${esc(s.name)}</h3>${c ? chartHTML(rows, c) : tableHTML(rows, 0, 4)}</div>`;
+    };
+    return {title:'Dashboards', html:`
+      ${state.dashboards.map(d => `<div class="row spread" style="margin-top:6px"><h2>${esc(d.name)}</h2>${canEdit() ? `<button class="btn small danger" data-act="del-dash" data-id="${d.id}">Delete</button>` : ''}</div>
+        <div class="grid cols2">${d.widgets.map(id => state.saved.find(s => s.id === id)).filter(Boolean).map(widget).join('') || '<div class="empty">No widgets.</div>'}</div>`).join('') || '<div class="panel empty">No dashboards yet.</div>'}
+      ${canEdit() ? `<div class="panel"><h2>New dashboard</h2>${state.saved.length ? `<form data-form="dashboard">
+        <div class="field"><label for="dbName">Name</label><input id="dbName" type="text" required></div>
+        <div class="field"><label>Widgets (from saved queries)</label>${state.saved.map(s => `<label style="font-weight:400"><input type="checkbox" name="w" value="${s.id}"> ${esc(s.name)}</label>`).join('')}</div>
+        <button class="btn primary" type="submit">Create dashboard</button></form>` : '<p class="muted">Save a query first to add it as a widget.</p>'}</div>` : ''}`};
+  },
+
+  approvals(){
+    const pend = state.approvals.filter(a => a.status === 'pending'), done = state.approvals.filter(a => a.status !== 'pending');
+    return {title:'Approvals', html:`
+      <h2>Waiting for review</h2>
+      ${pend.map(a => { const q = getQ(a.qid); return `<div class="panel"><div class="row spread"><b>${esc(q.question)}</b><span class="muted">Requested by ${esc(a.requestedBy)}, ${when(a.time)}</span></div>
+        <p>${badge('Why', 'warn')} ${esc(a.reason)}</p><pre class="sql">${esc(q.sql)}</pre>
+        <div class="row"><button class="btn primary" data-act="approve" data-id="${a.id}">Approve</button><button class="btn danger" data-act="reject" data-id="${a.id}">Reject</button><a href="#/query/${q.id}">Open details</a></div></div>`; }).join('') || '<div class="panel empty">Nothing is waiting for review.</div>'}
+      <h2 style="margin-top:20px">Decisions</h2>
+      <div class="panel flat">${done.length ? `<table><thead><tr><th>Question</th><th>Requested by</th><th>Decision</th><th>By</th></tr></thead><tbody>${done.map(a => `<tr><td>${esc(getQ(a.qid).question)}</td><td>${esc(a.requestedBy)}</td><td>${badge(a.status, a.status === 'approved' ? 'ok' : 'bad')}</td><td>${esc(a.approvedBy)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No decisions yet.</div>'}</div>`};
+  },
+
+  usage(){
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], max = Math.max(...state.daily);
+    const tokens = state.usage.tokens + 48200, cost = (tokens / 1000 * 0.004).toFixed(2);
+    return {title:'Usage', html:`
+      <div class="grid cols4" style="margin-bottom:18px">
+        <div class="stat"><b>${state.usage.runs + 118}</b><span>Queries run this month</span></div>
+        <div class="stat"><b>${state.usage.rejected + 6}</b><span>Blocked by SQL policy</span></div>
+        <div class="stat"><b>${tokens.toLocaleString('en-US')}</b><span>AI tokens used</span></div>
+        <div class="stat"><b>$${cost}</b><span>Estimated AI cost</span></div>
+      </div>
+      <div class="panel"><h2>Queries per day, last 7 days</h2>
+        ${state.daily.map((v, i) => `<div class="bar"><span>${days[i]}${i === 6 ? ' (today)' : ''}</span><div class="bt"><i style="width:${v / max * 100}%"></i></div><span class="bv">${v}</span></div>`).join('')}</div>`};
+  },
+
+  audit(){
+    const actions = [...new Set(state.audit.map(a => a.action))].sort();
+    const rows = state.audit.filter(a => state.auditFilter === 'all' || a.action === state.auditFilter);
+    return {title:'Audit logs', html:`
+      <div class="row" style="margin-bottom:12px"><label for="auditSel" style="margin:0">Action</label>
+        <select id="auditSel" data-change="audit" style="max-width:240px"><option value="all">All actions</option>${actions.map(a => `<option ${a === state.auditFilter ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select></div>
+      <div class="panel flat"><table><thead><tr><th>Time</th><th>Who</th><th>Action</th><th>Item</th><th>Details</th></tr></thead><tbody>
+      ${rows.map(a => `<tr><td>${when(a.time)}</td><td>${esc(a.actor)}</td><td>${badge(a.action, /reject|denied/.test(a.action) ? 'bad' : '')}</td><td>${esc(a.entity)}</td><td>${esc(a.meta)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">No entries.</td></tr>'}</tbody></table></div>`};
+  },
+
+  settings(){
+    const s = state.settings;
+    return {title:'Settings', html:`
+      <div class="panel"><h2>Query limits and retention</h2>
+        <form data-form="settings" class="grid cols2">
+          <div class="field"><label for="sRows">Maximum rows per query</label><input id="sRows" type="number" min="1" max="100000" value="${s.rowLimit}"></div>
+          <div class="field"><label for="sTime">Query timeout (seconds)</label><input id="sTime" type="number" min="1" max="600" value="${s.timeout}"></div>
+          <div class="field"><label for="sJoin">Ask for approval when a query uses this many tables</label><input id="sJoin" type="number" min="2" max="20" value="${s.joinThreshold}"></div>
+          <div class="field"><label for="sRet">Keep query history (days)</label><input id="sRet" type="number" min="1" max="3650" value="${s.retention}"></div>
+          <div style="grid-column:1/-1"><button class="btn primary" type="submit">Save settings</button></div></form></div>
+      <div class="panel"><h2>Sensitivity labels</h2>
+        <p><span class="badge ok">public</span> <span class="badge info">internal</span> <span class="badge warn">confidential</span> <span class="badge bad">restricted</span></p>
+        <p class="hint">Confidential columns need approval before they can be queried. Restricted columns and blocked tables are always rejected.</p></div>
+      <div class="panel"><h2>Your data</h2><p class="muted">Export or delete the query history stored for your account.</p>
+        <div class="row"><button class="btn" data-act="export">Export my data</button><button class="btn danger" data-act="erase">Delete my data</button></div></div>`};
+  }
+};
+
+function msgHTML(m){
+  if (m.role === 'user') return `<div class="msg user">${esc(m.text)}</div>`;
+  const q = m.qid ? getQ(m.qid) : null;
+  return `<div class="msg bot"><p>${esc(m.text)}</p>
+    ${m.chips ? `<div class="chips">${m.chips.map(c => `<button class="chip" data-act="suggest" data-text="${esc(c)}">${esc(c)}</button>`).join('')}</div>` : ''}
+    ${q ? `<div class="qcard"><div class="row" style="margin-bottom:8px">${validationBadge(q)} ${approvalBadge(q)} ${execBadge(q)}</div>
+      <pre class="sql">${esc(q.sql)}</pre>
+      ${!q.validation.ok ? `<p class="hint">${esc(q.validation.checks.filter(c => !c.pass).map(c => c.detail).join(' '))}</p>` : ''}
+      <div class="row">${runButton(q, true)}<a class="btn small" href="#/query/${q.id}">Details and edit</a></div>
+      ${q.execution === 'success' ? `<div style="margin-top:12px">${chartHTML(q.rows, q.chart)}${tableHTML(q.rows, 0, 5)}
+        <div class="explain">${esc(q.explanation)}</div><a href="#/results/${q.id}">Open full results (${q.rows.length} rows)</a></div>` : ''}</div>` : ''}</div>`;
+}
+
+/* ---------- Router + render ---------- */
+function route(){
+  if (!state.user){ $('#login').hidden = false; $('#app').hidden = true; return; }
+  $('#login').hidden = true; $('#app').hidden = false;
+  render();
+}
+function currentRoute(){ const [page, arg] = (location.hash.replace(/^#\/?/, '') || 'home').split('/'); return {page, arg}; }
+function render(){
+  if (!state.user) return;
+  let {page, arg} = currentRoute();
+  const allowed = (NAV.find(n => n[0] === page) || [null, null, EXTRA[page]])[2];
+  if (!allowed || !allowed.includes(state.role)){ location.hash = '#/home'; return; }
+  const view = PAGES[page](arg);
+  const typing = document.activeElement && document.activeElement.id === 'askInput' ? $('#askInput').value : '';
+  $('#view').innerHTML = view.html;
+  $('#pageTitle').textContent = view.title;
+  document.title = view.title + ' | AI Data Analyst';
+  $('#nav').innerHTML = NAV.filter(n => n[2].includes(state.role)).map(n => `<a href="#/${n[0]}" class="${n[0] === page ? 'active' : ''}">${n[1]}</a>`).join('');
+  $('#whoName').textContent = state.user.name; $('#whoRole').textContent = state.role;
+  $('#roleSwitch').innerHTML = ROLES.map(r => `<option ${r === state.role ? 'selected' : ''}>${r}</option>`).join('');
+  if (typing){ const i = $('#askInput'); i.value = typing; i.focus(); }
+  if (page === 'chat'){ const e = $('#chatEnd'); if (e && state.messages.length) e.scrollIntoView({block:'end'}); }
+}
+window.addEventListener('hashchange', () => { state.resPage = 1; render(); window.scrollTo(0, 0); });
+
+/* ---------- Events ---------- */
+const actions = {
+  logout(){ state.user = null; location.hash = ''; route(); },
+  suggest(d){ ask(d.text); },
+  run(d){ runQuery(d.id); },
+  'req-approval'(d){ requestApproval(d.id); },
+  approve(d){ decide(d.id, 'approved'); },
+  reject(d){ decide(d.id, 'rejected'); },
+  validate(d){ const q = getQ(d.id); const before = q.draft; syncDraft(q); q.draft = before; applyValidation(q);
+    log('sql_validated', 'query', q.id, q.validation.ok ? 'passed' : 'failed'); render(); toast(q.validation.ok ? 'Validation passed' : 'Validation failed', q.validation.ok ? '' : 'err'); },
+  regen(d){ const q = getQ(d.id); if (!TPL[q.tpl]) return toast('Nothing to regenerate from.', 'err');
+    q.sql = q.draft = TPL[q.tpl].sql; q.edited = false; q.execution = 'not_run'; q.approval = 'none'; applyValidation(q);
+    state.usage.tokens += 650; log('sql_regenerated', 'query', q.id, ''); render(); toast('SQL regenerated'); },
+  save(d){ saveQuery(d.id); },
+  'run-saved'(d){ runSaved(d.id); },
+  'del-saved'(d){ state.saved = state.saved.filter(s => s.id !== d.id); state.dashboards.forEach(x => x.widgets = x.widgets.filter(w => w !== d.id)); log('saved_query_deleted', 'saved_query', d.id); render(); },
+  'del-dash'(d){ state.dashboards = state.dashboards.filter(x => x.id !== d.id); log('dashboard_deleted', 'dashboard', d.id); render(); },
+  refresh(d){ const s = state.dataSources.find(x => x.id === d.id); s.refreshed = new Date(); s.status = 'Connected';
+    log('schema_refreshed', 'data_source', s.id, s.name); render(); toast('Schema refreshed'); },
+  'clear-chat'(){ state.messages = []; render(); },
+  page(d){ state.resPage += +d.dir; render(); },
+  csv(d){ const q = getQ(d.id); const keys = Object.keys(q.rows[0] || {});
+    const csv = [keys.join(',')].concat(q.rows.map(r => keys.map(k => '"' + String(r[k]).replace(/"/g, '""') + '"').join(','))).join('\n');
+    download(q.id + '.csv', csv, 'text/csv'); log('results_downloaded', 'query', q.id, 'CSV'); },
+  export(){ download('my-data.json', JSON.stringify({queries:state.queries.filter(q => q.user === state.user.name).map(q => ({id:q.id, question:q.question, sql:q.sql, created:q.createdAt})), saved:state.saved}, null, 2), 'application/json');
+    log('data_exported', 'user', state.user.name); toast('Export downloaded'); },
+  erase(){ if (!confirm('Delete your query history and saved queries? This cannot be undone.')) return;
+    state.queries = state.queries.filter(q => q.user !== state.user.name); state.messages = []; state.saved = state.saved.filter(s => s.owner !== state.user.name);
+    state.dashboards.forEach(d => d.widgets = d.widgets.filter(w => state.saved.some(s => s.id === w)));
+    log('data_deleted', 'user', state.user.name); render(); toast('Your data was deleted'); }
+};
+function download(name, text, type){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  e.preventDefault();
+  const q = b.dataset.id && getQ(b.dataset.id);
+  if (q && ['run', 'req-approval', 'save'].includes(b.dataset.act) && $('#sqlEdit')) syncDraft(q);   // pick up unsaved edits
+  actions[b.dataset.act](b.dataset, b);
+});
+document.addEventListener('input', e => {
+  if (e.target.dataset.draft){ const q = getQ(e.target.dataset.draft); q.draft = e.target.value; }
+  if (e.target.dataset.filter === 'schema'){
+    const v = e.target.value.toLowerCase();
+    document.querySelectorAll('.schema-tbl').forEach(d => { d.hidden = !d.dataset.name.includes(v); if (v && !d.hidden) d.open = true; });
+  }
+});
+document.addEventListener('change', e => {
+  const k = e.target.dataset.change; if (!k) return;
+  if (k === 'role'){ state.role = e.target.value; state.user.role = state.role; log('role_switched', 'user', state.user.name, state.role); render(); }
+  if (k === 'ds'){ state.dsId = e.target.value; state.messages = []; render(); }
+  if (k === 'audit'){ state.auditFilter = e.target.value; render(); }
+});
+const forms = {
+  login(f){
+    const email = $('#lEmail').value.trim();
+    state.role = $('#lRole').value;
+    state.user = {name:email.split('@')[0].replace(/^./, c => c.toUpperCase()), email, role:state.role};
+    log('login', 'user', state.user.name, state.role);
+    location.hash = '#/home'; route();
+  },
+  ask(f){ const i = $('#askInput'); const t = i.value; i.value = ''; ask(t); },
+  datasource(f){
+    const ds = {id:'ds' + (state.dataSources.length + 1), name:$('#dName').value, type:$('#dType').value, host:$('#dHost').value, db:$('#dDb').value, status:'Pending schema', refreshed:null};
+    state.dataSources.push(ds);   // password and username are intentionally not kept in the browser
+    log('data_source_created', 'data_source', ds.id, ds.name); render(); toast('Connection saved. Refresh its schema next.');
+  },
+  dashboard(f){
+    const ids = [...f.querySelectorAll('input[name=w]:checked')].map(i => i.value);
+    if (!ids.length) return toast('Pick at least one saved query.', 'err');
+    const d = {id:nextId('D'), name:$('#dbName').value, widgets:ids}; state.dashboards.push(d);
+    log('dashboard_created', 'dashboard', d.id, d.name); render(); toast('Dashboard created');
+  },
+  settings(f){
+    state.settings = {rowLimit:+$('#sRows').value, timeout:+$('#sTime').value, joinThreshold:+$('#sJoin').value, retention:+$('#sRet').value};
+    log('settings_changed', 'organization', 'org-1', JSON.stringify(state.settings)); toast('Settings saved');
+  }
+};
+document.addEventListener('submit', e => { e.preventDefault(); const f = e.target.dataset.form; if (f && forms[f]) forms[f](e.target); });
+
+/* ---------- Seed data so every page has something to show ---------- */
+function seed(){
+  state.user = {name:'Maya', email:'maya@northwind.example', role:'Analyst'};
+  const ago = m => new Date(Date.now() - m * 60000);
+  const mk = (question, key, mins) => {
+    const q = makeQuery({question, tpl:key, sql:TPL[key].sql});
+    q.createdAt = ago(mins); q.user = 'Maya'; q.rows = TPL[key].data().slice(0, limitOf(q.sql));
+    q.execution = 'success'; q.duration = 120 + Math.round(Math.random() * 400); q.executedAt = ago(mins - 1);
+    q.chart = chartFor(q); q.explanation = explain(q);
+    state.queries.push(q);
+    log('question_submitted', 'conversation', 'ds1', question, ago(mins + 1), 'Maya');
+    log('query_executed', 'query', q.id, q.rows.length + ' rows in ' + q.duration + ' ms (read-only role)', ago(mins - 1), 'Maya');
+    return q;
+  };
+  const q1 = mk('Monthly revenue trend', 'monthly', 600), q2 = mk('Orders by status', 'status', 380), q3 = mk('Top customers by spend', 'customers', 90);
+  state.queries.reverse();
+  state.saved = [q1, q2, q3].map(q => ({id:nextId('S'), name:TPL[q.tpl].title, sql:q.sql, tpl:q.tpl, edited:false, owner:'Maya', ds:'ds1', question:q.question}));
+  state.dashboards = [{id:nextId('D'), name:'Executive overview', widgets:state.saved.slice(0, 3).map(s => s.id)}];
+  state.usage.runs = 3; state.daily[6] = 3; state.usage.tokens = 4800;
+  state.user = null;
+}
+seed();
+route();
+</script>
+</body>
+</html>

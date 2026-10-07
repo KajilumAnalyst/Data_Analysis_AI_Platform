@@ -1,0 +1,23 @@
+backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── config.py
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── auth.py
+│   ├── security.py
+│   ├── agent.py
+│   ├── sql_policy.py
+│   └── api/
+│       ├── __init__.py
+│       ├── datasources.py
+│       ├── analyst.py
+│       ├── queries.py
+│       ├── saved_queries.py
+│       ├── dashboards.py
+│       └── audit.py
+├── requirements.txt
+├── Dockerfile
+└── bundle_zip.py
